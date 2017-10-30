@@ -1,6 +1,18 @@
 import requireHacker from 'require-hacker'
+import { extname } from 'path'
 import { browserify, unbrowserify } from 'ethical-utility-browserifier'
-import { requireModule, getAppPrefix, isRelativePackage } from 'ethical-utility-resolve-module-node'
+import {
+    getAppPrefix,
+    requireModule,
+    isRelativePackage
+} from 'ethical-utility-resolve-module'
+import {
+    isRemapped,
+    isConflicted,
+    getBrowserMap,
+    getConflictMap,
+    getModuleRootID
+} from 'ethical-utility-resolve-module-node'
 import { absolute, relative } from 'ethical-utility-path'
 import resolveCSSModule from './resolve-css.js'
 import resolveJSModule from './resolve-js.js'
@@ -8,8 +20,20 @@ import resolveJSModule from './resolve-js.js'
 let moduleID = 0
 const cache = {}
 
+const resolveMap = (map, modules) => {
+    const resolvedMap = {}
+    modules.forEach(({ key }) => {
+        const rootKey = getModuleRootID(key)
+        const mapped = map[rootKey]
+        if (mapped) {
+            resolvedMap[rootKey] = mapped
+        }
+    })
+    return resolvedMap
+}
+
 const resolveModule = (request, parent) => {
-    if (request.endsWith('.css')) {
+    if (extname(request) === '.css') {
         return resolveCSSModule(request, parent)
     }
     return resolveJSModule(request, parent)
@@ -40,11 +64,13 @@ const resolveCache = (cached, modules, exclude) => {
 
 const handler = (modules, exclude) => (request, { filename: parent }) => {
 
-    if (cache[request]) {
-        return resolveCache(cache[request], modules, exclude)
+    const remapped = isRemapped(request, parent) || request
+    const conflicted = isConflicted(remapped, parent) || remapped
+    if (cache[conflicted]) {
+        return resolveCache(cache[conflicted], modules, exclude)
     }
 
-    const resolvedModule = resolveModule(request, parent)
+    const resolvedModule = resolveModule(conflicted, parent)
     const { key, alias, path, source: getSource } = resolvedModule
 
     if (cache[key]) {
@@ -113,7 +139,10 @@ const moduleCapturerMiddleware = async (ctx, next, config) => {
         mainModule.key = getAppPrefix()
     }
 
-    ctx.response.body = JSON.stringify(modules)
+    const browserMap = resolveMap(getBrowserMap(), modules)
+    const conflictMap = resolveMap(getConflictMap(), modules)
+
+    ctx.response.body = JSON.stringify({ browserMap, conflictMap, modules })
     ctx.response.set('Content-Type', 'application/json')
 
     await next()

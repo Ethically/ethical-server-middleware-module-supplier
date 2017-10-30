@@ -1,10 +1,10 @@
 {
   "name": "ethical-server-middleware-module-supplier",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Runtime module supplier for the Ethical framework.",
   "main": "./dist/index.js",
   "scripts": {
-    "test": "npm run build-test && nutra --config ./nutra.config.js && npm run prepublish",
+    "test": "npm run build-test && NODE_ENV=test nyc --reporter=text --reporter=html mocha test/specs/**/*.js && npm run prepublish",
     "test-debugger": "DEBUG=1 node --inspect-brk ./node_modules/.bin/nutra --config ./nutra.config.js",
     "build": "babel src --out-dir dist --source-maps",
     "build-test": "babel ./test/files/src --out-dir ./test/files/dist --source-maps=false",
@@ -14,22 +14,39 @@
     "type": "git",
     "url": "git+https://github.com/Ethically/ethical-server-middleware-module-supplier.git"
   },
+  "engines": {
+    "node" : ">=7.6",
+    "npm" : ">=3"
+  },
   "author": "m-a-r-c-e-l-i-n-o <me@marceli.no>",
   "license": "ISC",
   "devDependencies": {
     "babel-cli": "^6.24.0",
+    "babel-plugin-istanbul": "^4.1.5",
     "babel-plugin-transform-object-rest-spread": "^6.23.0",
     "babel-preset-env": "^1.6.0",
+    "chai": "^4.1.2",
     "ethical-noop-module-browser": "0.0.1",
+    "ethical-noop-module-conflict": "0.0.0",
     "ethical-utility-server": "0.0.0",
+    "mocha": "^4.0.1",
     "node-fetch": "^1.7.2",
     "nutra": "0.0.14",
-    "nutra-jasmine-coverage-babel-preset": "0.0.10"
+    "nutra-jasmine-coverage-babel-preset": "0.0.10",
+    "nyc": "^11.2.1"
   },
   "dependencies": {
     "ethical-utility-browserifier": "0.0.0",
     "ethical-utility-path": "0.0.0",
-    "ethical-utility-resolve-module-node": "0.0.1",
+    "ethical-utility-resolve-module": "0.0.1",
+    "ethical-utility-resolve-module-node": "0.0.2",
     "require-hacker": "^3.0.0"
+  },
+  "nyc": {
+    "require": [
+      "babel-register"
+    ],
+    "sourceMap": false,
+    "instrument": false
   }
 }

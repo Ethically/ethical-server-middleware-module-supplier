@@ -1,4 +1,18 @@
 {
+    "env": {
+        "test": {
+            "plugins": [
+                [
+                    "istanbul",
+                    {
+                        "include": [
+                          "src/**/*.js"
+                        ]
+                    }
+                ]
+            ]
+        }
+    },
     "presets": [
         [
             "env",
@@ -6,7 +20,7 @@
                 "targets": {
                     "node": "7.5"
                 },
-                "debug": false,
+                "debug": true,
                 "useBuiltIns": true
             }
         ]
